@@ -170,7 +170,7 @@ vm_get_frame(void)
 	}
 	frame->kva = kva; // 프레임 멤버 초기화
 	// frame->page = NULL; // 명시적 초기화 추가
-
+	//list_push_back(&frame_table, &frame->frame_elem);
 	ASSERT(frame != NULL);
 	ASSERT(frame->page == NULL);
 	return frame;
@@ -180,6 +180,10 @@ vm_get_frame(void)
 static void
 vm_stack_growth(void *addr UNUSED)
 {
+	void *va = pg_round_down(addr);
+	if(vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_0, va, true, NULL, NULL)){
+		vm_claim_page(va);
+	}
 }
 
 /* Handle the fault on write_protected page */
@@ -194,6 +198,7 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
 {
 	struct supplemental_page_table *spt UNUSED = &thread_current()->spt;
 	struct page *page = NULL;
+	uint64_t MAX_STACK = USER_STACK - (1<<20);
 	if (addr == NULL)
 		return false;
 
@@ -205,9 +210,14 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
 		/* TODO: Validate the fault */
 		page = spt_find_page(spt, addr);
 		if (page == NULL){
-			 return false;
-		}
-			
+			if(addr >= f->rsp - 32 && addr < USER_STACK && addr > MAX_STACK){
+				vm_stack_growth(addr);
+			}
+			page = spt_find_page(spt, addr);
+			if (page == NULL){
+				return false;
+			}
+		}	
 		if (write == 1 && page->is_writable == 0) // write 불가능한 페이지에 write 요청한 경우
 			return false;
 		return vm_do_claim_page(page);
@@ -332,6 +342,8 @@ void supplemental_page_table_kill(struct supplemental_page_table *spt UNUSED)
 void hash_page_destroy(struct hash_elem *e, void *aux)
 {
 	struct page *page = hash_entry(e, struct page, hash_elem);
-	destroy(page);
-	free(page);
+	if(page != NULL){
+		vm_dealloc_page(page);
+	}
+	
 }

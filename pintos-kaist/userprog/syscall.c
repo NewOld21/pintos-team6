@@ -281,6 +281,11 @@ sys_read(int fd, void *buffer, size_t size){
 	if((fd<0) || (fd>=127)){
 		return -1;
 	}
+	#ifdef VM
+    struct page *page = spt_find_page(&curr->spt, buffer);
+    if (page != NULL && !page->is_writable)
+        sys_exit(-1);
+	#endif
 
 	if(fd == 0){
 		char *buf = (char *) buffer;

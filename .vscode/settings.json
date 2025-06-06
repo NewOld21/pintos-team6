@@ -26,6 +26,7 @@
         "debug.h": "c",
         "malloc.h": "c",
         "inspect.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "loader.h": "c"
     }
 }
