@@ -22,8 +22,8 @@ Executing 'page-linear':
 (page-linear) end
 page-linear: exit(0)
 Execution of 'page-linear' complete.
-Timer: 174 ticks
-Thread: 37 idle ticks, 40 kernel ticks, 98 user ticks
+Timer: 171 ticks
+Thread: 34 idle ticks, 42 kernel ticks, 95 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 81 reads, 244 writes
 hd1:0: 108 reads, 0 writes

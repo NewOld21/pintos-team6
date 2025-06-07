@@ -21,7 +21,7 @@ Executing 'mmap-bad-off':
 mmap-bad-off: exit(1)
 Execution of 'mmap-bad-off' complete.
 Timer: 277 ticks
-Thread: 195 idle ticks, 76 kernel ticks, 6 user ticks
+Thread: 192 idle ticks, 81 kernel ticks, 5 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 111 reads, 8072 writes
 hd1:0: 4017 reads, 0 writes

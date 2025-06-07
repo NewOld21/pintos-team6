@@ -64,7 +64,7 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
 
 		/* TODO: Insert the page into the spt. */
 		// 1. 페이지 생성
-		struct page *p = (struct page *)malloc(sizeof(struct page));
+		struct page *p = (struct page *)calloc(1,sizeof(struct page));
 		// 2. 타입에 따른 초기화 함수 가져오기
 		bool (*page_initializer)(struct page *, enum vm_type, void *);
 		switch (VM_TYPE(type))
@@ -75,6 +75,8 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
 		case VM_FILE:
 			page_initializer = file_backed_initializer;
 			break;
+		default:
+  			PANIC("Invalid VM type in vm_alloc_page_with_initializer");
 		}
 		// 3. uninit 타입의 페이지로 초기화
 		// uninit_new -> uninit 타입으로 초기화해주는 함수
@@ -177,13 +179,15 @@ vm_get_frame(void)
 }
 
 /* Growing the stack. */
-static void
+static bool
 vm_stack_growth(void *addr UNUSED)
 {
 	void *va = pg_round_down(addr);
 	if(vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_0, va, true, NULL, NULL)){
-		vm_claim_page(va);
+		thread_current()->stack_point = va;
+		return vm_claim_page(va);
 	}
+	return false;
 }
 
 /* Handle the fault on write_protected page */
@@ -198,31 +202,34 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
 {
 	struct supplemental_page_table *spt UNUSED = &thread_current()->spt;
 	struct page *page = NULL;
-	uint64_t MAX_STACK = USER_STACK - (1<<20);
-	if (addr == NULL)
-		return false;
+	void * MAX_STACK = (USER_STACK - (1 << 20)) ;
+    if (addr == NULL || is_kernel_vaddr(addr))
+        return false;
 
-	if (is_kernel_vaddr(addr))
-		return false;
-
-	if (not_present) // 접근한 메모리의 physical page가 존재하지 않은 경우
-	{
-		/* TODO: Validate the fault */
+    if (not_present)
+    {
+		/** Project 3-Stack Growth*/
 		page = spt_find_page(spt, addr);
-		if (page == NULL){
-			if(addr >= f->rsp - 32 && addr < USER_STACK && addr > MAX_STACK){
-				vm_stack_growth(addr);
+		if(page == NULL){
+			void *rsp = user ?  pg_round_down(f->rsp) : thread_current()->stack_point;
+			if (MAX_STACK <= rsp - 8 && rsp - 8 == addr && addr <= USER_STACK){
+				if(!vm_stack_growth(addr))
+					return false;
+			}
+			else if (MAX_STACK <= rsp && rsp <= addr && addr <= USER_STACK){
+				if(!vm_stack_growth(addr))
+					return false;
 			}
 			page = spt_find_page(spt, addr);
-			if (page == NULL){
-				return false;
-			}
-		}	
-		if (write == 1 && page->is_writable == 0) // write 불가능한 페이지에 write 요청한 경우
+		}
+		
+
+		if (page == NULL || (write && !page->is_writable))
 			return false;
+		
 		return vm_do_claim_page(page);
-	}
-	return false;
+    }
+    return false;
 }
 
 /* Free the page.

@@ -28,8 +28,8 @@ Executing 'lazy-file':
 (lazy-file) load page [0]
 lazy-file: exit(-1)
 Execution of 'lazy-file' complete.
-Timer: 88 ticks
-Thread: 39 idle ticks, 40 kernel ticks, 9 user ticks
+Timer: 87 ticks
+Thread: 38 idle ticks, 41 kernel ticks, 8 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 147 reads, 350 writes
 hd1:0: 151 reads, 0 writes
