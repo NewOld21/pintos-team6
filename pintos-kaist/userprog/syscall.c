@@ -15,6 +15,7 @@
 #include "intrinsic.h"
 #include <stdio.h>
 #include "threads/thread.h"
+#include "vm/vm.h"
 
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
@@ -33,8 +34,8 @@ int sys_open(char *filename);
 bool sys_remove(char *filename);
 int sys_filesize(int fd);
 
-
-
+void *sys_mmap (void *addr, size_t length, int writable, int fd, off_t offset);
+void sys_munmap (void *addr);
 /* System call.
  *
  * Previously system call services was handled by the interrupt handler
@@ -139,7 +140,18 @@ syscall_handler (struct intr_frame *f UNUSED) {
 		}
 		case SYS_CLOSE : {
 			sys_close((int)f->R.rdi);
+			break;
 		}
+		 case SYS_MMAP: {
+			sys_mmap((void *)f->R.rdi, (size_t)f->R.rsi, (int)f->R.rdx, (struct file*) f->R.r10, (off_t)f->R.r8);
+			break;
+		}
+            
+        case SYS_MUNMAP:{ // SYS_MUNMAP
+			sys_munmap((void *)f->R.rdi);
+			break;
+		}
+
 	}
 
 	// thread_exit ();
@@ -399,4 +411,27 @@ sys_tell(int fd){
 	if (f == NULL)
 		return (unsigned)-1;
 	file_tell(f);
+}
+
+
+
+void *sys_mmap (void *addr, size_t length, int writable, int fd, off_t offset){
+	if (length == 0) {
+		sys_exit(-1);
+	}
+	if(addr == NULL || is_kernel_vaddr(addr)){
+		sys_exit(-1);
+	}
+	if((fd<=1) || (fd>=127)){
+		sys_exit(-1);
+	}
+
+	return do_mmap(addr, length, writable, fd, offset);
+}
+
+void sys_munmap (void *addr){
+	if(addr == NULL || is_kernel_vaddr(addr)){
+		sys_exit(-1);
+	}
+	return do_munmap(addr);
 }

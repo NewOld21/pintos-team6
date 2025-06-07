@@ -179,6 +179,23 @@ vm_get_frame(void)
 }
 
 /* Growing the stack. */
+// 상황:
+// - 유저 스택의 주소인 addr에 접근했어요 (예: 함수 호출, 변수 선언 등).
+
+// - 근데 addr은 아직 물리 메모리에 매핑된 페이지가 없음.
+
+// - 그래서 page fault가 났고, vm_try_handle_fault()가 호출됨.
+
+// OS가 하는 일:
+// - addr이 유저 스택 주소 범위 안에 있는지 확인
+// - (MAX_STACK <= addr <= USER_STACK)
+
+// - 근데 addr은 아직 SPT에 없음 → 페이지가 존재하지 않음
+
+// - 그러면 이 주소에 맞는 새 페이지를 생성해서 물리 메모리에 할당해 줘야 함
+
+// - 바로 그 작업이 스택 growth, 즉 vm_stack_growth(addr)가 하는 일임
+// 	→ anon 페이지 할당 + SPT에 등록 + frame 연결
 static bool
 vm_stack_growth(void *addr UNUSED)
 {
@@ -209,17 +226,29 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
     if (not_present)
     {
 		/** Project 3-Stack Growth*/
-		page = spt_find_page(spt, addr);
-		if(page == NULL){
-			void *rsp = user ?  pg_round_down(f->rsp) : thread_current()->stack_point;
-			if (MAX_STACK <= rsp - 8 && rsp - 8 == addr && addr <= USER_STACK){
-				if(!vm_stack_growth(addr))
+		if (page == NULL) {
+			// 페이지가 spt에 존재하지 않는다면, 즉 아직 해당 가상 주소에 대한 매핑이 없다면,
+		
+			void *rsp = user ? pg_round_down(f->rsp) : thread_current()->stack_point;
+			// 만약 유저 모드라면 유저 스택 포인터(rsp)를 현재 인터럽트 프레임에서 가져오고,
+			// 그렇지 않으면 (커널 모드일 경우) 현재 스레드에 저장해둔 스택 포인터를 사용한다.
+			// 단, 유저 스택은 페이지 단위로 할당되기 때문에 rsp를 페이지 하단 기준으로 정렬한다.
+
+			if (MAX_STACK <= rsp - 8 && rsp - 8 == addr && addr <= USER_STACK) {
+			// push 명령어 등으로 인해 rsp보다 낮은 주소에 쓰기를 시도한 경우
+			// 스택 프레임 푸시 직전 주소 접근인 경우 (push 명령어 직후에 fault 나는 상황
+
+				if (!vm_stack_growth(addr))
+					return false;
+
+			} else if (MAX_STACK <= rsp && rsp <= addr && addr <= USER_STACK) {
+			//  rsp보다 높은 주소에 접근했지만 여전히 스택 영역인 경우
+			// 일반적인 스택 사용 (예: 지역 변수 할당 등)으로 인한 접근의 경우
+
+				if (!vm_stack_growth(addr))
 					return false;
 			}
-			else if (MAX_STACK <= rsp && rsp <= addr && addr <= USER_STACK){
-				if(!vm_stack_growth(addr))
-					return false;
-			}
+
 			page = spt_find_page(spt, addr);
 		}
 		
