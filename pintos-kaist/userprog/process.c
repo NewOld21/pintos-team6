@@ -774,7 +774,7 @@ install_page (void *upage, void *kpage, bool writable) {
  * 만약 프로젝트 2에서만 함수를 구현하고자 한다면,
  * 위의 블록에 구현하십시오. */
 
-static bool
+bool
 lazy_load_segment (struct page *page, void *aux) {
 	/* TODO: 파일에서 세그먼트를 로드합니다 */
 	/* TODO: 이 함수는 첫 번째 페이지 폴트가 발생할 때 호출됩니다. */

@@ -142,8 +142,8 @@ syscall_handler (struct intr_frame *f UNUSED) {
 			sys_close((int)f->R.rdi);
 			break;
 		}
-		 case SYS_MMAP: {
-			sys_mmap((void *)f->R.rdi, (size_t)f->R.rsi, (int)f->R.rdx, (struct file*) f->R.r10, (off_t)f->R.r8);
+		case SYS_MMAP: {
+			f->R.rax = sys_mmap((void *)f->R.rdi, (size_t)f->R.rsi, (int)f->R.rdx, (struct file*) f->R.r10, (off_t)f->R.r8);
 			break;
 		}
             
@@ -417,20 +417,43 @@ sys_tell(int fd){
 
 void *sys_mmap (void *addr, size_t length, int writable, int fd, off_t offset){
 	if (length == 0) {
-		sys_exit(-1);
+		return NULL;
 	}
-	if(addr == NULL || is_kernel_vaddr(addr)){
-		sys_exit(-1);
+	if(addr == NULL){
+		return NULL;
 	}
 	if((fd<=1) || (fd>=127)){
-		sys_exit(-1);
+		return NULL;
+	}
+	if(pg_round_down(addr) != addr){
+		return NULL;
+	}
+	if(pg_round_down(offset) != offset){
+		return NULL;
+	}
+	if (pg_ofs(offset) != 0){
+		return NULL;
+	}
+    	
+	struct file *f = thread_current()->file_table[fd];
+	if(f==NULL ){
+		return NULL;
+	}
+	lock_acquire(&file_lock);
+	off_t len = file_length(f);
+	lock_release(&file_lock);
+	if(len==0 || offset >= len){
+		return NULL;
 	}
 
-	return do_mmap(addr, length, writable, fd, offset);
+	lock_acquire(&file_lock);
+	void *va = do_mmap(addr, length, writable, f, offset);
+	lock_release(&file_lock);
+	return va;
 }
 
 void sys_munmap (void *addr){
-	if(addr == NULL || is_kernel_vaddr(addr)){
+	if(addr == NULL || pg_round_down(addr)!=addr){
 		sys_exit(-1);
 	}
 	return do_munmap(addr);

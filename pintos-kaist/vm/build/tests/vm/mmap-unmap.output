@@ -4,7 +4,7 @@ Kernel command line: -q -f put mmap-unmap put sample.txt run mmap-unmap
 Pintos booting with: 
 	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
 	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  130,867,200 loops/s.
+Calibrating timer...  65,433,600 loops/s.
 hd0:0: detected 329 sector (164 kB) disk, model "QEMU HARDDISK", serial "QM00001"
 hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
 hd1:0: detected 109 sector (54 kB) disk, model "QEMU HARDDISK", serial "QM00003"
@@ -17,15 +17,28 @@ Executing 'mmap-unmap':
 (mmap-unmap) begin
 (mmap-unmap) open "sample.txt"
 (mmap-unmap) mmap "sample.txt"
-mmap-unmap: exit(-1)
-Execution of 'mmap-unmap' complete.
-Timer: 90 ticks
-Thread: 41 idle ticks, 46 kernel ticks, 4 user ticks
+(mmap-unmap) memory is readable 540884285
+(mmap-unmap) memory is readable 540888381
+(mmap-unmap) unmapped memory is readable (0): FAILED
+mmap-unmap: exit(1)
+Interrupt 0x0d (#GP General Protection Exception) at rip=80042188e1
+ cr2=0000000010001000 error=               0
+rax cccccccccccccccc rbx 000000004747feb0 rcx 0000000000000080 rdx 000000800423d138
+rsp 0000008004242d60 rbp 0000008004242d70 rsi 000000800423d618 rdi 000000800423d5b0
+rip 00000080042188e1 r8 0000008004242d98  r9 000000800421b4e2 r10 0000000000000000
+r11 0000000000000202 r12 000000800421d038 r13 0000008004242ec0 r14 0000000000000000
+r15 0000008004242e90 rflags 00000202
+es: 001b ds: 001b cs: 0008 ss: 0010
+Kernel PANIC at ../../userprog/exception.c:98 in kill(): Kernel bug - unexpected interrupt in kernel
+Call stack: 0x8004218069 0x800421cd42 0x8004208ea5 0x80042092c3 0x8004218924 0x800421a60b 0x8004221b34 0x800421c135 0x800421c101 0x800420746f 0x800421d822 0x800421d0c2 0x800421cf77 0x40045e 0x400230 0x400ce3 0x400d2c 0.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Timer: 138 ticks
+Thread: 44 idle ticks, 55 kernel ticks, 39 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 112 reads, 256 writes
+hd0:1: 114 reads, 256 writes
 hd1:0: 109 reads, 0 writes
 hd1:1: 0 reads, 0 writes
-Console: 1062 characters output
-Keyboard: 0 keys pressed
-Exception: 1 page faults
-Powering off...
+Console: 2159 characters output
+Key

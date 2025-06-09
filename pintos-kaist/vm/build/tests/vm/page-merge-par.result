@@ -1,14 +1,15 @@
 FAIL
-Kernel panic in run: PANIC at ../../lib/kernel/list.c:78 in list_next(): assertion `is_head (elem) || is_interior (elem)' failed.
-Call stack: 0x8004218069 0x80042182e5 0x800420a7d0 0x800420a709 0x800421b32d 0x800421b4a3 0x800421daa9 0x800421d1ce 0x800421cf77 0x400b9a 0x400c0e 0x400219 0x4007f7 0x400107 0x401504 0x40154d
+Kernel panic in run: PANIC at ../../userprog/exception.c:98 in kill(): Kernel bug - unexpected interrupt in kernel
+Call stack: 0x8004218069 0x800421cd42 0x8004208ea5 0x80042092c3 0x800420a709 0x800421b32d 0x800421b4a3 0x800421dab7 0x800421d1ce 0x800421cf77 0x400b9a 0x400c0e 0x400219 0x4007f7 0x400107 0x401504 0x40154d
 Translation of call stack:
 0x0000008004218069: debug_panic (lib/kernel/debug.c:32)
-0x00000080042182e5: list_next (lib/kernel/list.c:79)
-0x000000800420a7d0: remove_donor (threads/synch.c:299)
+0x000000800421cd42: kill (userprog/exception.c:104)
+0x0000008004208ea5: intr_handler (threads/interrupt.c:352)
+0x00000080042092c3: intr_entry (threads/intr-stubs.o:?)
 0x000000800420a709: lock_release (threads/synch.c:277)
 0x000000800421b32d: release_console (lib/kernel/console.c:103)
 0x000000800421b4a3: putbuf (lib/kernel/console.c:148)
-0x000000800421daa9: sys_write (userprog/syscall.c:351)
+0x000000800421dab7: sys_write (userprog/syscall.c:351)
 0x000000800421d1ce: syscall_handler (userprog/syscall.c:109)
 0x000000800421cf77: no_sti (userprog/syscall-entry.o:?)
 0x0000000000400b9a: (unknown)

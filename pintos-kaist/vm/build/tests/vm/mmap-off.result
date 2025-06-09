@@ -1,2 +1,18 @@
 FAIL
-run: try to mmap with offset 0x1000: FAILED
+Kernel panic in run: PANIC at ../../userprog/exception.c:98 in kill(): Kernel bug - unexpected interrupt in kernel
+Call stack: 0x8004218069 0x800421cd42 0x8004208ea5 0x80042092c3 0x8004218924 0x800421a60b 0x8004221b34 0x800421c135 0x800421c101 0x800420746f 0x800421d822 0x800421d0c2 0x800421cf77 0x400fff
+Translation of call stack:
+0x0000008004218069: debug_panic (lib/kernel/debug.c:32)
+0x000000800421cd42: kill (userprog/exception.c:104)
+0x0000008004208ea5: intr_handler (threads/interrupt.c:352)
+0x00000080042092c3: intr_entry (threads/intr-stubs.o:?)
+0x0000008004218924: list_pop_front (lib/kernel/list.c:254)
+0x000000800421a60b: hash_clear (lib/kernel/hash.c:59)
+0x0000008004221b34: supplemental_page_table_kill (vm/vm.c:377)
+0x000000800421c135: process_cleanup (userprog/process.c:422)
+0x000000800421c101: process_exit (userprog/process.c:408)
+0x000000800420746f: thread_exit (threads/thread.c:384)
+0x000000800421d822: sys_read (userprog/syscall.c:285)
+0x000000800421d0c2: syscall_handler (userprog/syscall.c:83)
+0x000000800421cf77: no_sti (userprog/syscall-entry.o:?)
+0x0000000000400fff: (unknown)

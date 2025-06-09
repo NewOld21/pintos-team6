@@ -225,6 +225,7 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
 
     if (not_present)
     {
+		page = spt_find_page(spt, addr);
 		/** Project 3-Stack Growth*/
 		if (page == NULL) {
 			// 페이지가 spt에 존재하지 않는다면, 즉 아직 해당 가상 주소에 대한 매핑이 없다면,
